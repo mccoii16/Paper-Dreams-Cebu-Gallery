@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default-deny global safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Event validation
+    function isValidEvent(data) {
+      return data.title is string && data.title.size() <= 150 &&
+             data.slug is string && data.slug.size() <= 100 &&
+             data.status in ['active', 'draft', 'archived'] &&
+             data.ownerId is string;
+    }
+
+    // Media validation
+    function isValidMedia(data) {
+      return data.eventId is string &&
+             data.type in ['photo', 'video'] &&
+             data.url is string &&
+             data.title is string && data.title.size() <= 200;
+    }
+
+    // User profiles
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Events collection
+    match /events/{eventId} {
+      allow get: if isValidId(eventId) && (
+        resource.data.status == 'active' ||
+        (isSignedIn() && resource.data.ownerId == request.auth.uid)
+      );
+
+      allow list: if resource.data.status == 'active' ||
+                     (isSignedIn() && resource.data.ownerId == request.auth.uid);
+
+      allow create: if isValidId(eventId) &&
+                       isSignedIn() &&
+                       incoming().ownerId == request.auth.uid &&
+                       isValidEvent(incoming());
+
+      allow update: if isValidId(eventId) &&
+                       isSignedIn() &&
+                       resource.data.ownerId == request.auth.uid &&
+                       incoming().ownerId == existing().ownerId &&
+                       isValidEvent(incoming());
+
+      allow delete: if isValidId(eventId) &&
+                       isSignedIn() &&
+                       resource.data.ownerId == request.auth.uid;
+
+      // Media sub-collection
+      match /media/{mediaId} {
+        allow get: if isValidId(mediaId) && (
+          get(/databases/$(database)/documents/events/$(eventId)).data.status == 'active' ||
+          (isSignedIn() && get(/databases/$(database)/documents/events/$(eventId)).data.ownerId == request.auth.uid)
+        );
+
+        allow list: if get(/databases/$(database)/documents/events/$(eventId)).data.status == 'active' ||
+                       (isSignedIn() && get(/databases/$(database)/documents/events/$(eventId)).data.ownerId == request.auth.uid);
+
+        allow create: if isValidId(mediaId) &&
+                         isValidMedia(incoming()) && (
+                           (isSignedIn() && get(/databases/$(database)/documents/events/$(eventId)).data.ownerId == request.auth.uid) ||
+                           get(/databases/$(database)/documents/events/$(eventId)).data.allowGuestUploads == true
+                         );
+
+        allow update: if isValidId(mediaId) &&
+                         isSignedIn() &&
+                         get(/databases/$(database)/documents/events/$(eventId)).data.ownerId == request.auth.uid &&
+                         isValidMedia(incoming());
+
+        allow delete: if isValidId(mediaId) &&
+                         isSignedIn() &&
+                         get(/databases/$(database)/documents/events/$(eventId)).data.ownerId == request.auth.uid;
+      }
+    }
+  }
+}

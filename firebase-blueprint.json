@@ -1,0 +1,205 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile for registered event organizers",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "User display name"
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Avatar photo URL"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account registration timestamp"
+        }
+      },
+      "required": ["email", "createdAt"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Event gallery record representing a private or public photo gallery",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Event title",
+          "maxLength": 150
+        },
+        "slug": {
+          "type": "string",
+          "description": "Unique URL-friendly slug",
+          "maxLength": 100
+        },
+        "date": {
+          "type": "string",
+          "description": "Event date formatted string"
+        },
+        "time": {
+          "type": "string",
+          "description": "Event start time"
+        },
+        "location": {
+          "type": "string",
+          "description": "Venue or geographical location",
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "description": "Host welcome message",
+          "maxLength": 1000
+        },
+        "coverImage": {
+          "type": "string",
+          "description": "Event cover photograph URL"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["active", "draft", "archived"],
+          "description": "Publication status of the event"
+        },
+        "isPasswordProtected": {
+          "type": "boolean",
+          "description": "Whether a PIN code is required by guests"
+        },
+        "pinCode": {
+          "type": "string",
+          "description": "PIN code required if password protected",
+          "maxLength": 20
+        },
+        "allowGuestUploads": {
+          "type": "boolean",
+          "description": "Whether guests can contribute media"
+        },
+        "allowOriginalDownloads": {
+          "type": "boolean",
+          "description": "Whether original quality downloads are permitted"
+        },
+        "theme": {
+          "type": "string",
+          "enum": ["warm-white", "charcoal", "editorial-sand"],
+          "description": "Color aesthetic theme"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the organizer who owns this event"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["title", "slug", "ownerId", "status"]
+    },
+    "Media": {
+      "title": "Media",
+      "description": "Photo or video media asset metadata belonging to an event gallery",
+      "type": "object",
+      "properties": {
+        "eventId": {
+          "type": "string",
+          "description": "ID of the parent event"
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the user who uploaded the media"
+        },
+        "url": {
+          "type": "string",
+          "description": "Public download URL in Firebase Storage or sample asset URL"
+        },
+        "storagePath": {
+          "type": "string",
+          "description": "Cloud Storage path (events/{eventId}/media/{mediaId})"
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "Optimized thumbnail URL"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["photo", "video"],
+          "description": "Type of media"
+        },
+        "title": {
+          "type": "string",
+          "description": "Media title or caption",
+          "maxLength": 200
+        },
+        "caption": {
+          "type": "string",
+          "description": "Optional story or description",
+          "maxLength": 500
+        },
+        "duration": {
+          "type": "string",
+          "description": "Duration for video items (e.g. 0:34)"
+        },
+        "fileSize": {
+          "type": "string",
+          "description": "Human-readable file size (e.g. 6.8 MB)"
+        },
+        "dimensions": {
+          "type": "string",
+          "description": "Pixel dimensions (e.g. 4032 x 3024)"
+        },
+        "width": {
+          "type": "number",
+          "description": "Pixel width"
+        },
+        "height": {
+          "type": "number",
+          "description": "Pixel height"
+        },
+        "capturedAt": {
+          "type": "string",
+          "description": "Capture date/time label"
+        },
+        "uploadedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Upload timestamp"
+        },
+        "views": {
+          "type": "number",
+          "description": "View counter"
+        },
+        "downloads": {
+          "type": "number",
+          "description": "Download counter"
+        }
+      },
+      "required": ["eventId", "type", "url"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Registered organizer profiles"
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Event galleries"
+    },
+    "/events/{eventId}/media/{mediaId}": {
+      "schema": "Media",
+      "description": "Media items in an event gallery"
+    }
+  }
+}
