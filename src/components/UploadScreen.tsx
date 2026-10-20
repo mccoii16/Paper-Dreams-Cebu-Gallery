@@ -23,6 +23,7 @@ interface UploadScreenProps {
 
 export interface QueuedItem {
   id: string;
+  mediaId: string;
   file?: File;
   previewUrl: string;
   name: string;
@@ -34,6 +35,7 @@ export interface QueuedItem {
   progress: number;
   status: 'pending' | 'processing-thumb' | 'uploading' | 'completed' | 'cancelled' | 'error';
   errorMessage?: string;
+  errorCode?: string;
   uploadTaskRef?: any;
   uploadedRecord?: FirebaseMediaRecord;
 }
@@ -132,12 +134,13 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
 
       // Step 3: Resumable upload directly to Firebase Storage
       setQueue((prev) =>
-        prev.map((q) => (q.id === item.id ? { ...q, status: 'uploading', progress: 12 } : q))
+        prev.map((q) => (q.id === item.id ? { ...q, status: 'uploading', progress: 0, errorMessage: undefined, errorCode: undefined } : q))
       );
 
       const titleToUse = item.customTitle?.trim() || item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' ');
 
       const record = await uploadMediaToEvent(event.id, item.file, {
+        mediaId: item.mediaId,
         title: titleToUse,
         caption: item.caption,
         thumbnailBlob,
@@ -151,14 +154,13 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
           );
         },
         onProgress: (percent) => {
-          // Scale upload progress between 12% and 98%
-          const scaled = 12 + Math.round((percent * 0.86));
+          // Requirement 5: Update the progress bar using the actual Firebase upload progress (0 - 100%)
           setQueue((prev) =>
             prev.map((q) =>
               q.id === item.id
                 ? {
                     ...q,
-                    progress: scaled >= 98 ? 98 : scaled,
+                    progress: percent,
                     status: 'uploading',
                   }
                 : q
@@ -182,7 +184,22 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
         )
       );
     } catch (err: any) {
-      if (err?.code === 'storage/canceled' || item.status === 'cancelled') {
+      const fbCode = err?.code || (err?.name === 'FirebaseError' ? 'storage/unknown' : undefined);
+      const fbMessage = err?.message || 'Firebase Storage upload failed. Please try again.';
+
+      // Requirement 8: Log actual Firebase error code and message for failed uploads
+      console.error('[UploadScreen] Firebase Storage upload error:', {
+        itemId: item.id,
+        mediaId: item.mediaId,
+        fileName: item.name,
+        code: fbCode,
+        message: fbMessage,
+        name: err?.name,
+        serverResponse: err?.serverResponse,
+        rawError: err,
+      });
+
+      if (fbCode === 'storage/canceled' || item.status === 'cancelled') {
         // Upload was intentionally cancelled
         setQueue((prev) =>
           prev.map((q) =>
@@ -190,6 +207,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
               ? {
                   ...q,
                   status: 'cancelled',
+                  errorCode: 'storage/canceled',
                   errorMessage: 'Upload was paused or cancelled.',
                 }
               : q
@@ -198,14 +216,26 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
         return;
       }
 
-      console.error('File upload failed:', err);
+      // Format helpful error description showing the underlying Firebase error code
+      let formattedMsg = fbCode ? `[${fbCode}] ${fbMessage}` : fbMessage;
+      if (fbCode === 'storage/unauthorized') {
+        formattedMsg = `[storage/unauthorized] Permission denied. Please verify Firebase Storage security rules for events/${event.id}/originals.`;
+      } else if (fbCode === 'storage/bucket-not-found') {
+        formattedMsg = `[storage/bucket-not-found] Storage bucket not found. Please verify VITE_FIREBASE_STORAGE_BUCKET.`;
+      } else if (fbCode === 'storage/quota-exceeded') {
+        formattedMsg = `[storage/quota-exceeded] Project storage quota exceeded.`;
+      } else if (fbCode === 'storage/retry-limit-exceeded') {
+        formattedMsg = `[storage/retry-limit-exceeded] Upload timed out. Please check your internet connection and retry.`;
+      }
+
       setQueue((prev) =>
         prev.map((q) =>
           q.id === item.id
             ? {
                 ...q,
                 status: 'error',
-                errorMessage: err instanceof Error ? err.message : 'Storage upload failed. Please try again.',
+                errorCode: fbCode,
+                errorMessage: formattedMsg,
               }
             : q
         )
@@ -260,9 +290,11 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
 
       const previewUrl = URL.createObjectURL(file);
       const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+      const mediaId = `med-${Date.now().toString(36)}-${idx}-${Math.random().toString(36).substring(2, 6)}`;
 
       const queuedItem: QueuedItem = {
         id: `upl-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
+        mediaId,
         file,
         previewUrl,
         name: file.name,
@@ -366,9 +398,20 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
     setQueue((prev) => prev.filter((item) => item.status !== 'pending'));
   };
 
-  // Retry single failed upload
+  // Retry single failed upload without creating duplicate records
   const handleRetry = (item: QueuedItem) => {
-    startUpload(item);
+    if (!item.file) return;
+    const retryItem: QueuedItem = {
+      ...item,
+      status: 'pending',
+      progress: 0,
+      errorMessage: undefined,
+      errorCode: undefined,
+    };
+    setQueue((prev) =>
+      prev.map((q) => (q.id === item.id ? retryItem : q))
+    );
+    startUpload(retryItem);
   };
 
   // Update item title or caption in queue
@@ -383,6 +426,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
     const sampleItems: QueuedItem[] = [
       {
         id: `sample-${Date.now()}-1`,
+        mediaId: `med-sample-${Date.now()}-1`,
         name: 'RAW_8421_Evening_Portrait.jpg',
         customTitle: 'Golden Hour Couple Portrait',
         caption: 'Captured with 85mm f/1.4 lens at sundown.',
@@ -395,6 +439,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
       },
       {
         id: `sample-${Date.now()}-2`,
+        mediaId: `med-sample-${Date.now()}-2`,
         name: 'CLIP_042_Dance_Floor_Live.mp4',
         customTitle: 'Celebration Dance Floor Dynamic',
         caption: 'High-energy celebration recorded in 4K 60fps.',
@@ -407,6 +452,7 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
       },
       {
         id: `sample-${Date.now()}-3`,
+        mediaId: `med-sample-${Date.now()}-3`,
         name: 'TOAST_091_Crystal_Flutes.jpg',
         customTitle: 'Opening Toast & Welcome Speeches',
         caption: 'Crystal champagne flutes during evening toast.',
@@ -422,59 +468,72 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
     showToast(`Added 3 sample media files to the queue.`, 'info');
   };
 
-  // Finish batch and update event gallery immediately without page refresh
+  // Finish batch and update event gallery immediately without duplicate records
   const handleFinishAndSave = () => {
     const completedItems = queue.filter((q) => q.status === 'completed');
     if (completedItems.length === 0) return;
 
-    const newMediaItems: MediaItem[] = completedItems.map((item, idx) => {
-      if (item.uploadedRecord) {
-        return {
-          id: item.uploadedRecord.id,
-          url: item.uploadedRecord.url,
-          thumbnailUrl: item.uploadedRecord.thumbnailUrl || item.uploadedRecord.url,
-          type: item.uploadedRecord.type,
-          title: item.uploadedRecord.title,
-          caption: item.uploadedRecord.caption || '',
-          width: item.uploadedRecord.width || 4032,
-          height: item.uploadedRecord.height || 3024,
-          aspectRatio: item.uploadedRecord.type === 'video' ? '16:9' : '4:3',
-          duration: item.uploadedRecord.duration,
-          fileSize: item.uploadedRecord.fileSize,
-          dimensions: item.uploadedRecord.dimensions,
-          capturedAt: item.uploadedRecord.capturedAt,
-          uploadedAt: item.uploadedRecord.uploadedAt,
-          views: 0,
-          downloads: 0,
-          storagePath: item.uploadedRecord.storagePath,
-          thumbnailStoragePath: item.uploadedRecord.thumbnailStoragePath,
-          ownerId: item.uploadedRecord.ownerId,
-        };
-      }
+    // Requirement 7: Deduplicate by ID to guarantee no duplicate gallery records
+    const existingIds = new Set(event.items.map((item) => item.id));
+    const newMediaItems: MediaItem[] = [];
 
-      return {
-        id: `med-upl-${Date.now()}-${idx}`,
-        url: item.previewUrl,
-        thumbnailUrl: item.previewUrl,
-        type: item.type,
-        title: item.customTitle || item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' '),
-        caption: item.caption || 'Captured during the evening celebration.',
-        width: item.type === 'video' ? 3840 : 4032,
-        height: item.type === 'video' ? 2160 : 3024,
-        aspectRatio: item.type === 'video' ? '16:9' : '4:3',
-        duration: item.type === 'video' ? '0:28' : undefined,
-        videoSrc: item.type === 'video' ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' : undefined,
-        fileSize: item.sizeFormatted,
-        dimensions: item.type === 'video' ? '3840 x 2160 (4K)' : '4032 x 3024 (12MP)',
-        capturedAt: 'Just now',
-        uploadedAt: new Date().toISOString(),
-        views: 0,
-        downloads: 0,
-      };
+    completedItems.forEach((item, idx) => {
+      if (item.uploadedRecord) {
+        if (!existingIds.has(item.uploadedRecord.id)) {
+          existingIds.add(item.uploadedRecord.id);
+          newMediaItems.push({
+            id: item.uploadedRecord.id,
+            url: item.uploadedRecord.url,
+            thumbnailUrl: item.uploadedRecord.thumbnailUrl || item.uploadedRecord.url,
+            type: item.uploadedRecord.type,
+            title: item.uploadedRecord.title,
+            caption: item.uploadedRecord.caption || '',
+            width: item.uploadedRecord.width || 4032,
+            height: item.uploadedRecord.height || 3024,
+            aspectRatio: item.uploadedRecord.type === 'video' ? '16:9' : '4:3',
+            duration: item.uploadedRecord.duration,
+            fileSize: item.uploadedRecord.fileSize,
+            dimensions: item.uploadedRecord.dimensions,
+            capturedAt: item.uploadedRecord.capturedAt,
+            uploadedAt: item.uploadedRecord.uploadedAt,
+            views: 0,
+            downloads: 0,
+            storagePath: item.uploadedRecord.storagePath,
+            thumbnailStoragePath: item.uploadedRecord.thumbnailStoragePath,
+            ownerId: item.uploadedRecord.ownerId,
+          });
+        }
+      } else {
+        const fallbackId = item.mediaId || item.id;
+        if (!existingIds.has(fallbackId)) {
+          existingIds.add(fallbackId);
+          newMediaItems.push({
+            id: fallbackId,
+            url: item.previewUrl,
+            thumbnailUrl: item.previewUrl,
+            type: item.type,
+            title: item.customTitle || item.name.replace(/\.[^/.]+$/, '').replace(/[_-]/g, ' '),
+            caption: item.caption || 'Captured during the evening celebration.',
+            width: item.type === 'video' ? 3840 : 4032,
+            height: item.type === 'video' ? 2160 : 3024,
+            aspectRatio: item.type === 'video' ? '16:9' : '4:3',
+            duration: item.type === 'video' ? '0:28' : undefined,
+            videoSrc: item.type === 'video' ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' : undefined,
+            fileSize: item.sizeFormatted,
+            dimensions: item.type === 'video' ? '3840 x 2160 (4K)' : '4032 x 3024 (12MP)',
+            capturedAt: 'Just now',
+            uploadedAt: new Date().toISOString(),
+            views: 0,
+            downloads: 0,
+          });
+        }
+      }
     });
 
-    onMediaUploaded(event.id, newMediaItems);
-    showToast(`Successfully published ${completedItems.length} media items to ${event.title}!`, 'success');
+    if (newMediaItems.length > 0) {
+      onMediaUploaded(event.id, newMediaItems);
+      showToast(`Successfully published ${newMediaItems.length} media items to ${event.title}!`, 'success');
+    }
     
     // Clear completed items from queue
     setQueue((prev) => prev.filter((q) => q.status !== 'completed'));

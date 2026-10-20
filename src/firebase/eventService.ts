@@ -200,6 +200,7 @@ export async function getPublishedEvents(): Promise<FirebaseEventRecord[]> {
 // -------------------------------------------------------------
 
 export interface UploadOptions {
+  mediaId?: string;
   onProgress?: (percent: number) => void;
   onTaskCreated?: (task: any) => void;
   title?: string;
@@ -209,66 +210,7 @@ export interface UploadOptions {
   height?: number;
   duration?: string;
   event?: EventGallery;
-}
-
-/**
- * Direct file upload helper via backend endpoint /api/upload.
- * Used when direct Firebase Storage write fails or yields storage/unauthorized.
- */
-async function uploadViaServer(
-  eventId: string,
-  mediaId: string,
-  file: File,
-  thumbnailBlob: Blob | null | undefined,
-  onProgress?: (percent: number) => void
-): Promise<{
-  url: string;
-  storagePath: string;
-  thumbnailUrl: string;
-  thumbnailStoragePath?: string;
-}> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const formData = new FormData();
-    formData.append('file', file, file.name);
-    formData.append('eventId', eventId);
-    formData.append('mediaId', mediaId);
-    if (thumbnailBlob) {
-      formData.append('thumbnail', thumbnailBlob, `${mediaId}_thumb.jpg`);
-    }
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && onProgress) {
-        const percent = Math.round((e.loaded / e.total) * 100);
-        onProgress(percent);
-      }
-    };
-
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const res = JSON.parse(xhr.responseText);
-          resolve(res);
-        } catch {
-          reject(new Error('Invalid JSON response from server upload.'));
-        }
-      } else {
-        try {
-          const res = JSON.parse(xhr.responseText);
-          reject(new Error(res.error || `Upload failed with HTTP ${xhr.status}`));
-        } catch {
-          reject(new Error(`Upload failed with HTTP ${xhr.status}`));
-        }
-      }
-    };
-
-    xhr.onerror = () => {
-      reject(new Error('Network error during file upload. Please verify your connection.'));
-    };
-
-    xhr.open('POST', '/api/upload');
-    xhr.send(formData);
-  });
+  customStoragePath?: string;
 }
 
 export async function uploadMediaToEvent(
@@ -277,7 +219,7 @@ export async function uploadMediaToEvent(
   options: UploadOptions = {}
 ): Promise<FirebaseMediaRecord> {
   const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|webm|m4v)$/i.test(file.name);
-  const mediaId = `med-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  const mediaId = options.mediaId || `med-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
   const cleanFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   
   // 0. Ensure user has a valid Firebase auth state if unauthenticated
@@ -285,11 +227,11 @@ export async function uploadMediaToEvent(
     try {
       await signInAnonymously(auth);
     } catch {
-      // Anonymous auth may not be enabled in Firebase console, proceed with fallback
+      // Anonymous auth may be disabled in console; proceed with user session
     }
   }
 
-  // 1. Ensure parent event exists in Firestore if provided (e.g., initial sample events)
+  // 1. Ensure parent event exists in Firestore if provided
   if (options.event) {
     try {
       const parentRef = doc(db, 'events', eventId);
@@ -310,8 +252,8 @@ export async function uploadMediaToEvent(
           allowOriginalDownloads: options.event.allowOriginalDownloads ?? true,
           theme: options.event.theme || 'warm-white',
           ownerId: auth.currentUser?.uid || options.event.ownerId || 'organizer',
-          organizerName: options.event.organizer?.name || 'Aura Event Studio',
-          organizerEmail: options.event.organizer?.contactEmail || 'studio@auragallery.app',
+          organizerName: options.event.organizer?.name || 'Paper Dreams Cebu',
+          organizerEmail: options.event.organizer?.contactEmail || 'studio@paperdreams.cebu',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
@@ -321,91 +263,81 @@ export async function uploadMediaToEvent(
     }
   }
 
-  // Paths separating original files from generated web previews
-  const originalStoragePath = `events/${eventId}/originals/${mediaId}_${cleanFileName}`;
-  const thumbStoragePath = `events/${eventId}/thumbnails/${mediaId}_thumb.jpg`;
+  // 2. Event-specific Storage path: events/{eventId}/originals/{fileName}
+  // Preserving original file quality without client-side re-encoding
+  const originalStoragePath = options.customStoragePath || `events/${eventId}/originals/${cleanFileName}`;
+  const thumbStoragePath = `events/${eventId}/thumbnails/${cleanFileName.replace(/\.[^/.]+$/, '')}_thumb.jpg`;
 
-  let originalDownloadUrl = '';
-  let finalOriginalStoragePath = originalStoragePath;
-  let thumbnailDownloadUrl = '';
-  let finalThumbnailPath: string | undefined = undefined;
-
-  // Try direct Firebase Cloud Storage first
-  try {
-    const originalRef = ref(storage, originalStoragePath);
-    const uploadTask = uploadBytesResumable(originalRef, file, {
-      contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
-      customMetadata: {
-        eventId,
-        originalName: file.name,
-        uploadedAt: new Date().toISOString(),
-      },
-    });
-
-    options.onTaskCreated?.(uploadTask);
-
-    originalDownloadUrl = await new Promise<string>((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          if (snapshot.totalBytes > 0) {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            options.onProgress?.(Math.round(progress));
-          }
-        },
-        (error) => {
-          reject(error);
-        },
-        async () => {
-          try {
-            const url = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(url);
-          } catch (err) {
-            reject(err);
-          }
-        }
-      );
-    });
-
-    finalOriginalStoragePath = originalStoragePath;
-
-    // Upload generated thumbnail preview to Storage
-    if (options.thumbnailBlob) {
-      try {
-        const thumbRef = ref(storage, thumbStoragePath);
-        const thumbUpload = await uploadBytesResumable(thumbRef, options.thumbnailBlob, {
-          contentType: 'image/jpeg',
-        });
-        thumbnailDownloadUrl = await getDownloadURL(thumbUpload.ref);
-        finalThumbnailPath = thumbStoragePath;
-      } catch {
-        thumbnailDownloadUrl = originalDownloadUrl;
-      }
-    } else {
-      thumbnailDownloadUrl = originalDownloadUrl;
-    }
-  } catch (storageErr) {
-    console.warn(
-      'Firebase Cloud Storage direct upload unavailable (e.g. storage/unauthorized); falling back to trusted server storage:',
-      storageErr
-    );
-
-    // Resilient fallback: Server-side upload handler
-    const serverResult = await uploadViaServer(
+  // 3. Upload original file using modular Firebase Storage SDK
+  const originalRef = ref(storage, originalStoragePath);
+  const uploadTask = uploadBytesResumable(originalRef, file, {
+    contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
+    customMetadata: {
       eventId,
+      originalName: file.name,
       mediaId,
-      file,
-      options.thumbnailBlob,
-      options.onProgress
-    );
+      uploadedAt: new Date().toISOString(),
+    },
+  });
 
-    originalDownloadUrl = serverResult.url;
-    finalOriginalStoragePath = serverResult.storagePath;
-    thumbnailDownloadUrl = serverResult.thumbnailUrl;
-    finalThumbnailPath = serverResult.thumbnailStoragePath;
+  options.onTaskCreated?.(uploadTask);
+
+  // 4. Track progress and await download URL
+  const originalDownloadUrl = await new Promise<string>((resolve, reject) => {
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        if (snapshot.totalBytes > 0) {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          options.onProgress?.(progress);
+        }
+      },
+      (error) => {
+        // Log actual Firebase error code and message
+        console.error('[Firebase Storage] Upload failed:', {
+          code: error.code,
+          message: error.message,
+          name: error.name,
+          path: originalStoragePath,
+          serverResponse: (error as any).serverResponse,
+        });
+        reject(error);
+      },
+      async () => {
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          resolve(url);
+        } catch (urlErr) {
+          console.error('[Firebase Storage] Failed to retrieve download URL:', urlErr);
+          reject(urlErr);
+        }
+      }
+    );
+  });
+
+  if (!originalDownloadUrl) {
+    throw new Error('Firebase Storage upload succeeded but download URL is not available.');
   }
 
-  // Prepare metadata record (keeping binary out of Firestore)
+  // 5. Upload optional thumbnail preview to Storage
+  let thumbnailDownloadUrl = originalDownloadUrl;
+  let finalThumbnailPath: string | undefined = undefined;
+
+  if (options.thumbnailBlob) {
+    try {
+      const thumbRef = ref(storage, thumbStoragePath);
+      const thumbUpload = await uploadBytesResumable(thumbRef, options.thumbnailBlob, {
+        contentType: 'image/jpeg',
+      });
+      thumbnailDownloadUrl = await getDownloadURL(thumbUpload.ref);
+      finalThumbnailPath = thumbStoragePath;
+    } catch (thumbErr) {
+      console.warn('[Firebase Storage] Thumbnail preview upload failed; falling back to original media URL:', thumbErr);
+      thumbnailDownloadUrl = originalDownloadUrl;
+    }
+  }
+
+  // 6. Only save metadata to Firestore AFTER upload succeeds and download URL is available
   const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
   const width = options.width || (isVideo ? 1920 : 4032);
   const height = options.height || (isVideo ? 1080 : 3024);
@@ -415,7 +347,7 @@ export async function uploadMediaToEvent(
     eventId,
     ownerId: auth.currentUser?.uid || 'guest-upload',
     url: originalDownloadUrl,
-    storagePath: finalOriginalStoragePath,
+    storagePath: originalStoragePath,
     thumbnailUrl: thumbnailDownloadUrl,
     thumbnailStoragePath: finalThumbnailPath,
     type: isVideo ? 'video' : 'photo',
@@ -432,28 +364,41 @@ export async function uploadMediaToEvent(
     downloads: 0,
   };
 
-  // Write metadata to Firestore subcollection
-  const path = `events/${eventId}/media/${mediaId}`;
+  const mediaDocRef = doc(db, 'events', eventId, 'media', mediaId);
+  let isNewRecord = true;
   try {
-    await setDoc(doc(db, 'events', eventId, 'media', mediaId), mediaRecord);
-  } catch (error) {
-    console.warn('Note saving media record to Firestore:', error);
+    const existingDocSnap = await getDoc(mediaDocRef);
+    if (existingDocSnap.exists()) {
+      isNewRecord = false;
+    }
+  } catch {
+    // If offline or permission check note, proceed to setDoc
   }
 
-  // Update parent event stats
+  // Use setDoc with merge to ensure retries never create duplicate documents
   try {
-    const eventRef = doc(db, 'events', eventId);
-    const eventSnap = await getDoc(eventRef);
-    if (eventSnap.exists()) {
-      const currentStats = eventSnap.data().stats || { totalMedia: 0, photosCount: 0, videosCount: 0 };
-      await updateDoc(eventRef, {
-        'stats.totalMedia': (currentStats.totalMedia || 0) + 1,
-        'stats.photosCount': (currentStats.photosCount || 0) + (isVideo ? 0 : 1),
-        'stats.videosCount': (currentStats.videosCount || 0) + (isVideo ? 1 : 0),
-      });
+    await setDoc(mediaDocRef, mediaRecord, { merge: true });
+  } catch (firestoreError) {
+    console.error('[Firestore] Failed to save media metadata:', firestoreError);
+    handleFirestoreError(firestoreError, OperationType.CREATE, `events/${eventId}/media/${mediaId}`);
+  }
+
+  // Update parent event stats only for new records to prevent duplicate counter increments on retry
+  if (isNewRecord) {
+    try {
+      const eventRef = doc(db, 'events', eventId);
+      const eventSnap = await getDoc(eventRef);
+      if (eventSnap.exists()) {
+        const currentStats = eventSnap.data().stats || { totalMedia: 0, photosCount: 0, videosCount: 0 };
+        await updateDoc(eventRef, {
+          'stats.totalMedia': (currentStats.totalMedia || 0) + 1,
+          'stats.photosCount': (currentStats.photosCount || 0) + (isVideo ? 0 : 1),
+          'stats.videosCount': (currentStats.videosCount || 0) + (isVideo ? 1 : 0),
+        });
+      }
+    } catch (e) {
+      console.warn('Could not increment event media counter:', e);
     }
-  } catch (e) {
-    console.warn('Could not increment event media counter:', e);
   }
 
   return mediaRecord;

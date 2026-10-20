@@ -31,8 +31,12 @@ export const db = (configuredDatabaseId && configuredDatabaseId !== '(default)')
 // Initialize Firebase Auth
 export const auth = getAuth(app);
 
-// Initialize Cloud Storage
-export const storage = getStorage(app);
+// Initialize Cloud Storage using the existing Firebase app configuration and VITE_FIREBASE_STORAGE_BUCKET
+const storageBucket = 
+  (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET && import.meta.env.VITE_FIREBASE_STORAGE_BUCKET.trim()) || 
+  firebaseConfig.storageBucket;
+
+export const storage = getStorage(app, storageBucket || undefined);
 
 // Connection test as required by SKILL.md
 export async function testFirestoreConnection(): Promise<boolean> {
