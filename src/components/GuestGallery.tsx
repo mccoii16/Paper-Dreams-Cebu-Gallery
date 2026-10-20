@@ -8,6 +8,7 @@ import {
 } from '../utils/download';
 import { shareContent } from '../utils/share';
 import { downloadEventQRCodePNG } from '../utils/qrcode';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 import { 
   Download, Play, Film, Image as ImageIcon, QrCode, Share2, 
   Info, Sparkles, Check, ExternalLink, Calendar, MapPin, 
@@ -206,7 +207,7 @@ export const GuestGallery: React.FC<GuestGalleryProps> = ({
     setDownloadingItemId(item.id);
     const ext = item.type === 'video' ? 'mp4' : 'jpg';
     const filename = `${event.slug}-${item.id}.${ext}`;
-    const targetUrl = item.type === 'video' && item.videoSrc ? item.videoSrc : item.url;
+    const targetUrl = resolveMediaUrl(item.type === 'video' && item.videoSrc ? item.videoSrc : item.url);
 
     const result = await downloadMediaFile(targetUrl, filename, (status) => {
       setStatusToast({ message: status, type: 'info' });
@@ -381,7 +382,7 @@ export const GuestGallery: React.FC<GuestGalleryProps> = ({
       {/* Hero Cover Image Section */}
       <section className="relative w-full h-[40vh] sm:h-[52vh] lg:h-[60vh] bg-neutral-900 overflow-hidden">
         <img
-          src={event.coverImage}
+          src={resolveMediaUrl(event.coverImage)}
           alt={event.title}
           referrerPolicy="no-referrer"
           className="w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out hover:scale-102"
@@ -750,7 +751,7 @@ export const GuestGallery: React.FC<GuestGalleryProps> = ({
 
                     {/* Media Thumbnail */}
                     <img
-                      src={item.thumbnailUrl || item.url}
+                      src={resolveMediaUrl(item.thumbnailUrl || item.url)}
                       alt={item.title}
                       loading="lazy"
                       referrerPolicy="no-referrer"
@@ -852,7 +853,7 @@ export const GuestGallery: React.FC<GuestGalleryProps> = ({
             {(event.organizer.logoUrl || event.organizer.avatar) && (
               <div className="w-12 h-12 mx-auto rounded-full overflow-hidden border border-neutral-300 shadow-2xs mb-1">
                 <img
-                  src={event.organizer.logoUrl || event.organizer.avatar}
+                  src={resolveMediaUrl(event.organizer.logoUrl || event.organizer.avatar)}
                   alt={event.organizer.name}
                   className="w-full h-full object-cover"
                 />

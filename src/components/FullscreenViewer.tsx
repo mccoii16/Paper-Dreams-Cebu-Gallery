@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MediaItem } from '../types';
 import { downloadMediaFile } from '../utils/download';
 import { shareContent } from '../utils/share';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 import { 
   X, ChevronLeft, ChevronRight, Download, Share2, Info, 
   Play, Pause, Volume2, VolumeX, Check, AlertCircle, RefreshCw, FileText
@@ -147,9 +148,11 @@ export const FullscreenViewer: React.FC<FullscreenViewerProps> = ({
     if (downloading) return;
     setDownloading(true);
 
-    const targetUrl = currentItem.type === 'video' && currentItem.videoSrc
-      ? currentItem.videoSrc
-      : currentItem.url;
+    const targetUrl = resolveMediaUrl(
+      currentItem.type === 'video' && currentItem.videoSrc
+        ? currentItem.videoSrc
+        : currentItem.url
+    );
 
     const result = await downloadMediaFile(targetUrl, mediaFilename, (status) => {
       setStatusToast({ message: status, type: 'info' });
@@ -330,7 +333,7 @@ export const FullscreenViewer: React.FC<FullscreenViewerProps> = ({
                   <video
                     ref={videoRef}
                     src={currentItem.videoSrc || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'}
-                    poster={currentItem.url}
+                    poster={resolveMediaUrl(currentItem.url)}
                     className="max-h-[75vh] max-w-full object-contain rounded-xs shadow-2xl"
                     playsInline
                     muted={isMuted}
@@ -392,7 +395,7 @@ export const FullscreenViewer: React.FC<FullscreenViewerProps> = ({
             </div>
           ) : (
             <img
-              src={currentItem.url}
+              src={resolveMediaUrl(currentItem.url)}
               alt={currentItem.title}
               referrerPolicy="no-referrer"
               onLoad={() => setMediaLoading(false)}

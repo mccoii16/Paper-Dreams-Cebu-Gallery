@@ -9,7 +9,7 @@ export const SAMPLE_EVENTS: EventGallery[] = [
     time: '4:30 PM PDT',
     location: 'The Glasshouse Conservatory · Napa Valley, CA',
     description: 'Welcome to our wedding weekend celebration! Please browse through the evening memories, download your high-resolution favorites, and share the joy with us.',
-    coverImage: '/src/assets/images/event_cover_wedding_1792116548063.jpg',
+    coverImage: '/images/event_cover_wedding_1792116548063.jpg',
     organizer: {
       name: 'Elena Vance Studio',
       company: 'Vance Editorial Photography',
@@ -32,8 +32,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
     items: [
       {
         id: 'med-001',
-        url: '/src/assets/images/event_media_portrait_1792116549596.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_portrait_1792116549596.jpg',
+        url: '/images/event_media_portrait_1792116549596.jpg',
+        thumbnailUrl: '/images/event_media_portrait_1792116549596.jpg',
         type: 'photo',
         title: 'Sunset Portrait in the Pavilion',
         caption: 'First quiet moments together right after the vows, surrounded by garden bistro lights.',
@@ -57,8 +57,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-002',
-        url: '/src/assets/images/event_cover_wedding_1792116548063.jpg',
-        thumbnailUrl: '/src/assets/images/event_cover_wedding_1792116548063.jpg',
+        url: '/images/event_cover_wedding_1792116548063.jpg',
+        thumbnailUrl: '/images/event_cover_wedding_1792116548063.jpg',
         type: 'photo',
         title: 'Dinner at the Glasshouse Conservatory',
         caption: 'Panoramic view of the candlelit long oak tables beneath the star-filled conservatory glass ceiling.',
@@ -82,8 +82,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-003',
-        url: '/src/assets/images/event_media_champagne_1792116549629.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_champagne_1792116549629.jpg',
+        url: '/images/event_media_champagne_1792116549629.jpg',
+        thumbnailUrl: '/images/event_media_champagne_1792116549629.jpg',
         type: 'photo',
         title: 'Toast to the Newlyweds',
         caption: 'Champagne toast at golden hour surrounded by lifelong friends and family.',
@@ -107,8 +107,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-004',
-        url: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
+        url: '/images/event_media_dancefloor_1792116549721.jpg',
+        thumbnailUrl: '/images/event_media_dancefloor_1792116549721.jpg',
         type: 'video',
         title: 'Midnight Dance Floor Fever',
         caption: 'The brass ensemble played their final encore as the room erupted into celebration.',
@@ -134,8 +134,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-005',
-        url: '/src/assets/images/event_cover_gala_1792116550462.jpg',
-        thumbnailUrl: '/src/assets/images/event_cover_gala_1792116550462.jpg',
+        url: '/images/event_cover_gala_1792116550462.jpg',
+        thumbnailUrl: '/images/event_cover_gala_1792116550462.jpg',
         type: 'photo',
         title: 'Grand Ballroom Welcome & Entry',
         caption: 'Guests arriving in black-tie attire beneath the chandeliers for cocktail hour.',
@@ -159,8 +159,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-006',
-        url: '/src/assets/images/event_media_portrait_1792116549596.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_portrait_1792116549596.jpg',
+        url: '/images/event_media_portrait_1792116549596.jpg',
+        thumbnailUrl: '/images/event_media_portrait_1792116549596.jpg',
         type: 'photo',
         title: 'Laughing Under String Lights',
         caption: 'Candid laughter between the speeches during the main course.',
@@ -184,8 +184,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-007',
-        url: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
+        url: '/images/event_media_dancefloor_1792116549721.jpg',
+        thumbnailUrl: '/images/event_media_dancefloor_1792116549721.jpg',
         type: 'photo',
         title: 'The Party in Full Swing',
         caption: 'Dance circle surrounded by cheering friends and joyful music.',
@@ -209,8 +209,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-008',
-        url: '/src/assets/images/event_media_champagne_1792116549629.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_champagne_1792116549629.jpg',
+        url: '/images/event_media_champagne_1792116549629.jpg',
+        thumbnailUrl: '/images/event_media_champagne_1792116549629.jpg',
         type: 'video',
         title: 'Toast Speeches & Laughter',
         caption: 'Short clip of the maid of honor speech that brought everyone to tears of laughter.',
@@ -236,8 +236,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-009',
-        url: '/src/assets/images/event_cover_wedding_1792116548063.jpg',
-        thumbnailUrl: '/src/assets/images/event_cover_wedding_1792116548063.jpg',
+        url: '/images/event_cover_wedding_1792116548063.jpg',
+        thumbnailUrl: '/images/event_cover_wedding_1792116548063.jpg',
         type: 'photo',
         title: 'Fairy Lights Above the Dining Hall',
         caption: 'Overhead glow of the suspended string lights reflecting on wine glasses.',
@@ -261,8 +261,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-010',
-        url: '/src/assets/images/event_media_portrait_1792116549596.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_portrait_1792116549596.jpg',
+        url: '/images/event_media_portrait_1792116549596.jpg',
+        thumbnailUrl: '/images/event_media_portrait_1792116549596.jpg',
         type: 'video',
         title: 'The First Dance',
         caption: 'Slow acoustic dance accompanied by live violin and guitar.',
@@ -288,8 +288,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-011',
-        url: '/src/assets/images/event_cover_gala_1792116550462.jpg',
-        thumbnailUrl: '/src/assets/images/event_cover_gala_1792116550462.jpg',
+        url: '/images/event_cover_gala_1792116550462.jpg',
+        thumbnailUrl: '/images/event_cover_gala_1792116550462.jpg',
         type: 'photo',
         title: 'Architectural Vista at Twilight',
         caption: 'Wide atmospheric perspective across the hall as the twilight settled outside.',
@@ -313,8 +313,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-012',
-        url: '/src/assets/images/event_media_champagne_1792116549629.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_champagne_1792116549629.jpg',
+        url: '/images/event_media_champagne_1792116549629.jpg',
+        thumbnailUrl: '/images/event_media_champagne_1792116549629.jpg',
         type: 'photo',
         title: 'Late Night Sparkling Celebration',
         caption: 'One more celebration before heading into the afterparty.',
@@ -338,8 +338,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-013',
-        url: '/src/assets/images/event_media_portrait_1792116549596.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_portrait_1792116549596.jpg',
+        url: '/images/event_media_portrait_1792116549596.jpg',
+        thumbnailUrl: '/images/event_media_portrait_1792116549596.jpg',
         type: 'photo',
         title: 'Joyful Embrace Behind the Vines',
         caption: 'Unplanned embrace as evening breeze swept through the vineyard pavilion.',
@@ -363,8 +363,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-014',
-        url: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
+        url: '/images/event_media_dancefloor_1792116549721.jpg',
+        thumbnailUrl: '/images/event_media_dancefloor_1792116549721.jpg',
         type: 'photo',
         title: 'Finale Confetti & Cheer',
         caption: 'Sparklers and cheering guests marking the close of the reception.',
@@ -396,7 +396,7 @@ export const SAMPLE_EVENTS: EventGallery[] = [
     time: '6:00 PM EST',
     location: 'The Grand Beaux-Arts Ballroom · San Francisco, CA',
     description: 'An evening of celebration, philanthropy, and world-class live performance in support of youth creative arts education.',
-    coverImage: '/src/assets/images/event_cover_gala_1792116550462.jpg',
+    coverImage: '/images/event_cover_gala_1792116550462.jpg',
     organizer: {
       name: 'Beacon Arts Foundation',
       company: 'San Francisco Cultural Arts Council',
@@ -419,8 +419,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
     items: [
       {
         id: 'med-201',
-        url: '/src/assets/images/event_cover_gala_1792116550462.jpg',
-        thumbnailUrl: '/src/assets/images/event_cover_gala_1792116550462.jpg',
+        url: '/images/event_cover_gala_1792116550462.jpg',
+        thumbnailUrl: '/images/event_cover_gala_1792116550462.jpg',
         type: 'photo',
         title: 'Grand Hall Dinner Reception',
         caption: 'Overhead view of the annual gala attendees and benefactors.',
@@ -436,8 +436,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-202',
-        url: '/src/assets/images/event_media_champagne_1792116549629.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_champagne_1792116549629.jpg',
+        url: '/images/event_media_champagne_1792116549629.jpg',
+        thumbnailUrl: '/images/event_media_champagne_1792116549629.jpg',
         type: 'photo',
         title: 'Patron Toast to the Arts',
         caption: 'Opening welcoming remarks and patron champagne toast.',
@@ -453,8 +453,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
       },
       {
         id: 'med-203',
-        url: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
+        url: '/images/event_media_dancefloor_1792116549721.jpg',
+        thumbnailUrl: '/images/event_media_dancefloor_1792116549721.jpg',
         type: 'video',
         title: 'Symphony Jazz Quintet Live',
         caption: 'Live performance by the SF Symphony youth jazz fellows.',
@@ -480,7 +480,7 @@ export const SAMPLE_EVENTS: EventGallery[] = [
     time: '10:00 AM EST',
     location: 'Pioneer Works · Red Hook, Brooklyn, NY',
     description: 'A gathering of 350 international designers, architects, and creative directors discussing regenerative spatial design.',
-    coverImage: '/src/assets/images/event_cover_wedding_1792116548063.jpg',
+    coverImage: '/images/event_cover_wedding_1792116548063.jpg',
     organizer: {
       name: 'Studio Forma',
       company: 'Luminary Guild',
@@ -502,8 +502,8 @@ export const SAMPLE_EVENTS: EventGallery[] = [
     items: [
       {
         id: 'med-301',
-        url: '/src/assets/images/event_media_portrait_1792116549596.jpg',
-        thumbnailUrl: '/src/assets/images/event_media_portrait_1792116549596.jpg',
+        url: '/images/event_media_portrait_1792116549596.jpg',
+        thumbnailUrl: '/images/event_media_portrait_1792116549596.jpg',
         type: 'photo',
         title: 'Keynote Speaker Session',
         caption: 'Opening discussion on physical-digital architectural interfaces.',

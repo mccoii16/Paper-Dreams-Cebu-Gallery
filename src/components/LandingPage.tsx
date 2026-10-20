@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { EventGallery, AppView } from '../types';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 import { 
   ArrowRight, ShieldCheck, Download, Smartphone, QrCode, 
   Sparkles, CheckCircle2, ChevronRight, Play, Eye
@@ -85,7 +86,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-sm overflow-hidden border border-neutral-300/80 shadow-xl bg-neutral-900 group">
                 <img
-                  src={featuredEvent.coverImage}
+                  src={resolveMediaUrl(featuredEvent.coverImage)}
                   alt={featuredEvent.title}
                   referrerPolicy="no-referrer"
                   className="w-full aspect-[4/5] object-cover transition-transform duration-500 group-hover:scale-[1.01]"
@@ -167,7 +168,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <div>
                   <div className="relative aspect-[16/10] overflow-hidden bg-neutral-900">
                     <img
-                      src={evt.coverImage}
+                      src={resolveMediaUrl(evt.coverImage)}
                       alt={evt.title}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

@@ -26,6 +26,10 @@ if (!fs.existsSync(UPLOADS_DIR)) {
 // Serve uploaded media statically
 app.use('/uploads', express.static(UPLOADS_DIR));
 
+// Serve public assets (images, icons) statically
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+
 // Configure multer storage
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -303,6 +307,12 @@ app.post('/api/download-zip', async (req, res) => {
       if (mediaUrl.startsWith('/src/assets/') || mediaUrl.startsWith('src/assets/')) {
         // Local bundled asset
         const localPath = path.join(__dirname, mediaUrl.replace(/^\//, ''));
+        if (fs.existsSync(localPath)) {
+          archive.file(localPath, { name: entryName });
+        }
+      } else if (mediaUrl.startsWith('/images/') || mediaUrl.startsWith('images/')) {
+        // Public image asset
+        const localPath = path.join(__dirname, 'public', mediaUrl.replace(/^\//, ''));
         if (fs.existsSync(localPath)) {
           archive.file(localPath, { name: entryName });
         }

@@ -17,22 +17,22 @@ const PRESET_COVERS = [
   {
     id: 'cover-wedding',
     label: 'Glass Conservatory Wedding',
-    url: '/src/assets/images/event_cover_wedding_1792116548063.jpg'
+    url: '/images/event_cover_wedding_1792116548063.jpg'
   },
   {
     id: 'cover-gala',
     label: 'Grand Beaux-Arts Gala',
-    url: '/src/assets/images/event_cover_gala_1792116550462.jpg'
+    url: '/images/event_cover_gala_1792116550462.jpg'
   },
   {
     id: 'cover-party',
     label: 'Golden Hour Celebration',
-    url: '/src/assets/images/event_media_champagne_1792116549629.jpg'
+    url: '/images/event_media_champagne_1792116549629.jpg'
   },
   {
-    id: 'cover-architecture',
-    label: 'Modernist Pavilion Architecture',
-    url: '/src/assets/images/event_media_architecture_1792116549599.jpg'
+    id: 'cover-portrait',
+    label: 'Golden Light Portrait',
+    url: '/images/event_media_portrait_1792116549596.jpg'
   }
 ];
 

@@ -16,17 +16,17 @@ const PRESET_COVERS = [
   {
     id: 'cover-wedding',
     label: 'Glass Conservatory Wedding',
-    url: '/src/assets/images/event_cover_wedding_1792116548063.jpg'
+    url: '/images/event_cover_wedding_1792116548063.jpg'
   },
   {
     id: 'cover-gala',
     label: 'Grand Beaux-Arts Gala',
-    url: '/src/assets/images/event_cover_gala_1792116550462.jpg'
+    url: '/images/event_cover_gala_1792116550462.jpg'
   },
   {
     id: 'cover-party',
     label: 'Golden Hour Celebration',
-    url: '/src/assets/images/event_media_champagne_1792116549629.jpg'
+    url: '/images/event_media_champagne_1792116549629.jpg'
   }
 ];
 
@@ -161,8 +161,8 @@ export const CreateEvent: React.FC<CreateEventProps> = ({
         },
         {
           id: `med-${Date.now()}-2`,
-          url: '/src/assets/images/event_media_portrait_1792116549596.jpg',
-          thumbnailUrl: '/src/assets/images/event_media_portrait_1792116549596.jpg',
+          url: '/images/event_media_portrait_1792116549596.jpg',
+          thumbnailUrl: '/images/event_media_portrait_1792116549596.jpg',
           type: 'photo',
           title: 'Portrait in Warm Light',
           caption: 'Candid smiles right before dinner.',
@@ -178,8 +178,8 @@ export const CreateEvent: React.FC<CreateEventProps> = ({
         },
         {
           id: `med-${Date.now()}-3`,
-          url: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
-          thumbnailUrl: '/src/assets/images/event_media_dancefloor_1792116549721.jpg',
+          url: '/images/event_media_dancefloor_1792116549721.jpg',
+          thumbnailUrl: '/images/event_media_dancefloor_1792116549721.jpg',
           type: 'video',
           title: 'Evening Atmosphere Reel',
           caption: '4K video moment from the reception celebration.',
@@ -509,7 +509,7 @@ export const CreateEvent: React.FC<CreateEventProps> = ({
                       <img src={coverImage} alt="sample" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                     </div>
                     <div className="aspect-square bg-neutral-200 rounded overflow-hidden">
-                      <img src="/src/assets/images/event_media_portrait_1792116549596.jpg" alt="sample" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                      <img src="/images/event_media_portrait_1792116549596.jpg" alt="sample" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                     </div>
                   </div>
 

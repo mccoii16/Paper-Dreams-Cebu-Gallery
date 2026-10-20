@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { EventGallery, MediaItem } from '../types';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 import { 
   X, Trash2, Edit2, Check, ArrowUpDown, ArrowUp, ArrowDown, 
   UploadCloud, Search, CheckSquare, Square, Filter, 
@@ -316,7 +317,7 @@ export const MediaManagerModal: React.FC<MediaManagerModalProps> = ({
                       {/* Thumbnail Preview */}
                       <div className="relative w-14 h-14 bg-neutral-900 rounded overflow-hidden shrink-0 border border-neutral-200">
                         <img
-                          src={item.thumbnailUrl || item.url}
+                          src={resolveMediaUrl(item.thumbnailUrl || item.url)}
                           alt={item.title}
                           className="w-full h-full object-cover"
                         />

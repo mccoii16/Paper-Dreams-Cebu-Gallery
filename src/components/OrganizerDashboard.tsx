@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { EventGallery, MediaItem, AppView } from '../types';
 import { shareContent } from '../utils/share';
+import { resolveMediaUrl } from '../utils/mediaUrl';
 import { useAuth } from '../context/AuthContext';
 import { ShareQRModal } from './ShareQRModal';
 import { EventCustomizerModal } from './EventCustomizerModal';
@@ -536,7 +537,7 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({
                       {/* Event Cover Image & Status Badges */}
                       <div className="relative aspect-[16/9] bg-neutral-900 overflow-hidden">
                         <img
-                          src={evt.coverImage}
+                          src={resolveMediaUrl(evt.coverImage)}
                           alt={evt.title}
                           referrerPolicy="no-referrer"
                           className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
