@@ -66,11 +66,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         {/* Top Header */}
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-neutral-500 font-semibold">
-              Organizer Studio
+            <div className="text-[11px] uppercase tracking-wider text-pink-600 font-semibold">
+              Paper Dreams Cebu
             </div>
             <h3 className="text-xl font-serif-display font-medium text-neutral-900 mt-0.5">
-              {isRegistering ? 'Create Organizer Account' : 'Sign In to Aura Studio'}
+              {isRegistering ? 'Create Studio Account' : 'Sign In to Studio'}
             </h3>
           </div>
           <button

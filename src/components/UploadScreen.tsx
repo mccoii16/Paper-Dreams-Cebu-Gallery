@@ -11,8 +11,9 @@ import {
   UploadCloud, ArrowLeft, CheckCircle2, Film, Image as ImageIcon, 
   X, AlertCircle, RefreshCw, Eye, Sparkles, Plus, StopCircle, Check,
   Settings2, Sliders, Trash2, Camera, ShieldCheck, Play, ArrowRight,
-  Filter, Layers, Info
+  Filter, Layers, Info, Copy, Key
 } from 'lucide-react';
+import { AuthModal } from './AuthModal';
 
 interface UploadScreenProps {
   event: EventGallery;
@@ -77,6 +78,37 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
     setTimeout(() => {
       setStatusToast(null);
     }, duration);
+  };
+
+  // Storage rules permissions helper states
+  const [showRulesGuide, setShowRulesGuide] = useState<boolean>(true);
+  const [copiedRules, setCopiedRules] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+
+  const STORAGE_RULES_SNIPPET = `rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /events/{eventId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.resource.size < 120 * 1024 * 1024;
+      allow delete: if request.auth != null;
+    }
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.resource.size < 120 * 1024 * 1024;
+    }
+  }
+}`;
+
+  const handleCopyRules = async () => {
+    try {
+      await navigator.clipboard.writeText(STORAGE_RULES_SNIPPET);
+      setCopiedRules(true);
+      showToast('Firebase Storage rules copied to clipboard!', 'success');
+      setTimeout(() => setCopiedRules(false), 2500);
+    } catch {
+      showToast('Please select and copy the rules snippet manually.', 'error');
+    }
   };
 
   // Computed queue statistics
@@ -658,14 +690,26 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                   </span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setShowConfigPanel((prev) => !prev)}
-                  className="inline-flex items-center gap-1 text-neutral-700 hover:text-neutral-950 font-semibold text-xs transition-colors self-start sm:self-auto"
-                >
-                  <Settings2 className="w-3.5 h-3.5" />
-                  <span>{showConfigPanel ? 'Hide Settings' : 'Configure Limits & Modes'}</span>
-                </button>
+                <div className="flex items-center gap-3 self-start sm:self-auto flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setShowRulesGuide((prev) => !prev)}
+                    className="inline-flex items-center gap-1 text-pink-700 hover:text-pink-900 font-semibold text-xs transition-colors"
+                    title="View required Firebase Storage security rules"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-pink-600" />
+                    <span>{showRulesGuide ? 'Hide Rules Guide' : 'Storage Rules Guide'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfigPanel((prev) => !prev)}
+                    className="inline-flex items-center gap-1 text-neutral-700 hover:text-neutral-950 font-semibold text-xs transition-colors"
+                  >
+                    <Settings2 className="w-3.5 h-3.5" />
+                    <span>{showConfigPanel ? 'Hide Settings' : 'Configure Limits & Modes'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Expandable Configuration Controls */}
@@ -925,6 +969,104 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                 </div>
               </div>
 
+              {/* Firebase Storage Security Rules & Permissions Quick Fix Banner */}
+              {(showRulesGuide || queue.some((q) => q.errorCode === 'storage/unauthorized' || (q.errorMessage && q.errorMessage.includes('storage/unauthorized')))) && (
+                <div className="p-4 bg-pink-50/80 border border-pink-200 rounded-sm space-y-3 animate-in fade-in">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 text-pink-900 font-semibold text-xs">
+                      <ShieldCheck className="w-4 h-4 text-pink-600 shrink-0" />
+                      <span>Firebase Storage Permission Required for Event Media (`events/{event.id}/originals`)</span>
+                    </div>
+                    <button
+                      onClick={() => setShowRulesGuide(!showRulesGuide)}
+                      className="text-[11px] text-pink-700 hover:text-pink-900 font-medium underline shrink-0"
+                    >
+                      {showRulesGuide ? 'Hide Instructions' : 'Show Instructions'}
+                    </button>
+                  </div>
+
+                  {showRulesGuide && (
+                    <div className="space-y-3 text-xs text-neutral-700">
+                      <p className="leading-relaxed">
+                        Firebase Cloud Storage rejected the upload (<code className="font-mono text-rose-700 bg-rose-50 px-1 py-0.5 rounded border border-rose-200 text-[11px]">storage/unauthorized</code>) because your Firebase project's Storage Security Rules reject writes from unauthenticated guests or require sign-in.
+                      </p>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                        {/* Option 1: Storage Rules */}
+                        <div className="p-3.5 bg-white border border-pink-200 rounded space-y-2.5 shadow-2xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-neutral-900 text-xs">Option 1: Allow Event Uploads (Recommended)</span>
+                            <button
+                              onClick={handleCopyRules}
+                              className="px-2.5 py-1 bg-pink-100 hover:bg-pink-200 text-pink-800 text-[11px] font-semibold rounded flex items-center gap-1 transition-colors shrink-0"
+                              title="Copy Storage Rules to clipboard"
+                            >
+                              {copiedRules ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                              <span>{copiedRules ? 'Copied!' : 'Copy Rules'}</span>
+                            </button>
+                          </div>
+                          <p className="text-[11px] text-neutral-600 leading-normal">
+                            Go to <strong className="text-neutral-800">Firebase Console &gt; Storage &gt; Rules</strong> tab, paste the rules below, and click <strong className="text-neutral-800">Publish</strong>:
+                          </p>
+                          <pre className="p-2.5 bg-neutral-900 text-pink-200 font-mono text-[10.5px] rounded overflow-x-auto leading-relaxed border border-neutral-800 select-all">
+{`rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /events/{eventId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.resource.size < 120 * 1024 * 1024;
+      allow delete: if request.auth != null;
+    }
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.resource.size < 120 * 1024 * 1024;
+    }
+  }
+}`}
+                          </pre>
+                        </div>
+
+                        {/* Option 2: Sign in or Anonymous Auth */}
+                        <div className="p-3.5 bg-white border border-pink-200 rounded space-y-2.5 shadow-2xs flex flex-col justify-between">
+                          <div className="space-y-1.5">
+                            <span className="font-semibold text-neutral-900 text-xs block">Option 2: Sign In as Organizer</span>
+                            <p className="text-[11px] text-neutral-600 leading-normal">
+                              If your Firebase Storage rules are set to <code className="bg-neutral-100 px-1 py-0.5 rounded text-neutral-800 font-mono text-[10px]">allow write: if request.auth != null;</code>, sign in below to upload with your authenticated credentials:
+                            </p>
+                          </div>
+
+                          <div className="space-y-2 pt-2">
+                            <button
+                              onClick={() => setIsAuthModalOpen(true)}
+                              className="w-full py-2 px-3 bg-neutral-950 text-white hover:bg-neutral-800 text-xs font-semibold rounded flex items-center justify-center gap-1.5 transition-colors shadow-xs"
+                            >
+                              <Key className="w-3.5 h-3.5 text-pink-300" />
+                              <span>{currentUser ? `Signed in as ${currentUser.email || 'Organizer'}` : 'Sign In with Google / Email'}</span>
+                            </button>
+                            <p className="text-[10px] text-neutral-500 leading-normal">
+                              Tip: You can also enable <strong>Anonymous</strong> sign-in under <em>Firebase Console &gt; Authentication &gt; Sign-in method</em> so guests can upload automatically.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-between border-t border-pink-200/60 flex-wrap gap-2">
+                        <span className="text-[11px] text-neutral-600">
+                          Once your rules are published or you are signed in, click retry to immediately upload your photo:
+                        </span>
+                        <button
+                          onClick={handleRetryAllFailed}
+                          className="px-3.5 py-1.5 bg-pink-600 hover:bg-pink-700 text-white text-xs font-semibold rounded shadow-xs flex items-center gap-1.5 transition-colors"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>Retry All Failed ({failedCount})</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {queue.length === 0 ? (
                 <div className="py-12 text-center text-xs text-neutral-400">
                   Upload queue is currently empty. Drag photos & videos above to begin.
@@ -1036,9 +1178,17 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                                 <span className="text-neutral-500">Upload paused by user</span>
                               )}
                               {item.status === 'error' && (
-                                <span className="text-rose-600 flex items-center gap-1">
+                                <span className="text-rose-600 flex flex-wrap items-center gap-1">
                                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                   <span>{item.errorMessage || 'Storage upload interrupted'}</span>
+                                  {item.errorCode === 'storage/unauthorized' && (
+                                    <button
+                                      onClick={() => setShowRulesGuide(true)}
+                                      className="ml-1 text-[11px] font-semibold text-pink-700 hover:text-pink-900 underline inline-flex items-center gap-0.5 cursor-pointer"
+                                    >
+                                      How to fix <ArrowRight className="w-3 h-3" />
+                                    </button>
+                                  )}
                                 </span>
                               )}
                             </div>
@@ -1074,16 +1224,28 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
                             </button>
                           )}
 
-                          {/* Error or Cancelled: Retry Button */}
+                          {/* Error or Cancelled: Retry & Fix Buttons */}
                           {(item.status === 'error' || item.status === 'cancelled') && item.file && (
-                            <button
-                              onClick={() => handleRetry(item)}
-                              className="px-2 py-1 text-neutral-700 hover:text-neutral-950 bg-white border border-neutral-300 rounded text-[11px] font-semibold flex items-center gap-1"
-                              title="Retry upload"
-                            >
-                              <RefreshCw className="w-3 h-3" />
-                              <span>Retry</span>
-                            </button>
+                            <div className="flex items-center gap-1">
+                              {item.errorCode === 'storage/unauthorized' && (
+                                <button
+                                  onClick={() => setShowRulesGuide(true)}
+                                  className="px-2 py-1 text-pink-700 hover:text-pink-900 bg-pink-50 hover:bg-pink-100 border border-pink-200 rounded text-[11px] font-semibold flex items-center gap-1 transition-colors"
+                                  title="View Storage rules fix"
+                                >
+                                  <Key className="w-3 h-3" />
+                                  <span>Fix</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleRetry(item)}
+                                className="px-2 py-1 text-neutral-700 hover:text-neutral-950 bg-white border border-neutral-300 rounded text-[11px] font-semibold flex items-center gap-1 hover:bg-neutral-50"
+                                title="Retry upload"
+                              >
+                                <RefreshCw className="w-3 h-3" />
+                                <span>Retry</span>
+                              </button>
+                            </div>
                           )}
 
                           {/* Remove from queue button */}
@@ -1316,6 +1478,15 @@ export const UploadScreen: React.FC<UploadScreenProps> = ({
           <span className="leading-snug">{statusToast.message}</span>
         </div>
       )}
+
+      {/* Quick Sign-In Modal to grant storage write permission */}
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+        onSuccess={() => {
+          showToast('Signed in successfully! You can now retry your uploads.', 'success');
+        }}
+      />
     </div>
   );
 };

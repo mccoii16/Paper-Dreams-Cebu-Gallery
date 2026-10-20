@@ -225,9 +225,15 @@ export async function uploadMediaToEvent(
   // 0. Ensure user has a valid Firebase auth state if unauthenticated
   if (!auth.currentUser) {
     try {
-      await signInAnonymously(auth);
-    } catch {
-      // Anonymous auth may be disabled in console; proceed with user session
+      const anonCred = await signInAnonymously(auth);
+      console.log('[Firebase Auth] Signed in anonymously with UID:', anonCred.user.uid);
+    } catch (authErr: any) {
+      console.warn(
+        '[Firebase Auth] Anonymous sign-in attempt:',
+        authErr?.code,
+        authErr?.message,
+        '- If Storage rules require authentication, enable Anonymous Auth in Firebase Console or sign in.'
+      );
     }
   }
 
@@ -293,12 +299,14 @@ export async function uploadMediaToEvent(
         }
       },
       (error) => {
-        // Log actual Firebase error code and message
+        // Log actual Firebase error code and message with auth context
         console.error('[Firebase Storage] Upload failed:', {
           code: error.code,
           message: error.message,
           name: error.name,
           path: originalStoragePath,
+          userUid: auth.currentUser?.uid || 'unauthenticated',
+          isAnonymous: auth.currentUser?.isAnonymous || false,
           serverResponse: (error as any).serverResponse,
         });
         reject(error);

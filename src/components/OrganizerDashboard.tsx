@@ -176,8 +176,8 @@ export const OrganizerDashboard: React.FC<OrganizerDashboardProps> = ({
         {/* Studio Brand Header */}
         <div className="p-5 border-b border-neutral-100 flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">
-              Aura Gallery
+            <div className="text-[10px] uppercase font-bold tracking-widest text-pink-500">
+              Paper Dreams Cebu
             </div>
             <h2 className="text-base font-serif-display font-semibold text-neutral-900 tracking-tight">
               Organizer Studio

@@ -345,7 +345,7 @@ export const GuestGallery: React.FC<GuestGalleryProps> = ({
               onClick={() => onNavigateHome ? onNavigateHome() : window.location.assign('/')}
               className="px-4 py-2 bg-neutral-900 text-white text-xs font-semibold uppercase tracking-wider rounded-sm hover:bg-neutral-800 transition-colors"
             >
-              Return to Aura Gallery
+              Return to Paper Dreams Cebu
             </button>
             <div className="text-[11px] text-neutral-400">
               Host: {event.organizer.name} ({event.organizer.company})

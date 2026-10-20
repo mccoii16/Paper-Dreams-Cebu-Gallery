@@ -824,7 +824,7 @@ export const EventCustomizerModal: React.FC<EventCustomizerModalProps> = ({
 
                 {/* Simulated branding footer */}
                 <div className="p-4 text-center text-xs opacity-60">
-                  Captured by <strong>{organizerName}</strong> · {organizerCompany || 'Aura Gallery'}
+                  Captured by <strong>{organizerName}</strong> · {organizerCompany || 'Paper Dreams Cebu'}
                 </div>
               </div>
             </div>
