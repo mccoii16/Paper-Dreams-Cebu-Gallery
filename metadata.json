@@ -1,6 +1,6 @@
 {
-  "name": "Aura Gallery - Event Media Sharing",
-  "description": "A premium, mobile-first event photo and video sharing platform inspired by FotoShare, crafted with editorial photography design.",
+  "name": "Paper Dreams Cebu - Event Media Sharing",
+  "description": "A premium, mobile-first event photo and video sharing platform crafted with baby pink aesthetics for Paper Dreams Cebu.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

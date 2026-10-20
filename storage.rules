@@ -1,11 +1,17 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
+    // Event photo and video uploads (originals & thumbnails)
     match /events/{eventId}/{allPaths=**} {
       allow read: if true;
-      allow write: if request.resource.size < 120 * 1024 * 1024 &&
-                      request.resource.contentType.matches('(image|video)/.*');
+      allow write: if request.resource.size < 120 * 1024 * 1024;
       allow delete: if request.auth != null;
+    }
+
+    // Default media rule
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.resource.size < 120 * 1024 * 1024;
     }
   }
 }

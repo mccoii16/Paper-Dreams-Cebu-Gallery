@@ -26,7 +26,7 @@ import { AuthModal } from './components/AuthModal';
 function MainApp() {
   const { currentUser } = useAuth();
   const [events, setEvents] = useState<EventGallery[]>(SAMPLE_EVENTS);
-  const [selectedEventId, setSelectedEventId] = useState<string>(SAMPLE_EVENTS[0].id);
+  const [selectedEventId, setSelectedEventId] = useState<string>(SAMPLE_EVENTS[0]?.id || '');
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [cloudLoaded, setCloudLoaded] = useState(false);
@@ -35,8 +35,8 @@ function MainApp() {
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
-  // Active event object
-  const currentEvent = events.find((e) => e.id === selectedEventId) || events[0];
+  // Active event object (safe when 0 events exist)
+  const currentEvent = events.find((e) => e.id === selectedEventId) || events[0] || null;
 
   // Helper to convert Firestore event record to EventGallery
   const convertFirestoreToGallery = useCallback((record: FirebaseEventRecord, mediaItems: MediaItem[] = []): EventGallery => {
@@ -55,21 +55,21 @@ function MainApp() {
       allowGuestUploads: record.allowGuestUploads,
       allowOriginalDownloads: record.allowOriginalDownloads ?? true,
       theme: record.theme || 'warm-white',
-      accentColor: record.accentColor || '#171717',
+      accentColor: record.accentColor || '#ec4899',
       typographyPreset: record.typographyPreset || 'editorial-serif',
       ownerId: record.ownerId,
       organizer: {
-        name: record.organizerName || 'Elena Vance Studio',
-        company: record.organizerCompany || 'Vance Editorial Photography',
-        contactEmail: record.organizerEmail || 'studio@elenavance.photo',
-        logoUrl: record.organizerLogoUrl,
+        name: record.organizerName || 'Paper Dreams Cebu',
+        company: record.organizerCompany || 'Paper Dreams Studio',
+        contactEmail: record.organizerEmail || 'hello@paperdreamscebu.com',
+        logoUrl: record.organizerLogoUrl || '/assets/aistudio/logo2_606d60c8.png',
         phone: record.organizerPhone,
       },
       stats: {
         totalMedia: mediaItems.length || record.stats?.totalMedia || 0,
         photosCount: mediaItems.filter(m => m.type === 'photo').length || record.stats?.photosCount || 0,
         videosCount: mediaItems.filter(m => m.type === 'video').length || record.stats?.videosCount || 0,
-        totalSize: record.stats?.totalSize || '48 MB',
+        totalSize: record.stats?.totalSize || '0 MB',
         guestVisits: record.stats?.guestVisits || 1,
         downloadCount: record.stats?.downloadCount || 0,
       },
@@ -390,12 +390,12 @@ function MainApp() {
   const isUserOrganizer = Boolean(currentUser || currentView === 'organizer-dashboard' || currentView === 'upload-media');
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-neutral-900 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FFF5F7] text-neutral-900 flex flex-col font-sans">
       {/* Strict 3-zone Top Bar Contract with Auth Controls */}
       <Navbar
         currentView={currentView}
         onNavigate={(view) => setCurrentView(view)}
-        activeEventTitle={currentEvent.title}
+        activeEventTitle={currentEvent ? currentEvent.title : 'Paper Dreams Cebu'}
         onOpenAuth={() => setIsAuthModalOpen(true)}
       />
 
@@ -462,12 +462,12 @@ function MainApp() {
 
       {/* Fullscreen Media Viewer Lightbox */}
       <FullscreenViewer
-        items={currentEvent.items}
+        items={currentEvent ? currentEvent.items : []}
         currentIndex={viewerIndex}
         isOpen={isViewerOpen}
         onClose={() => setIsViewerOpen(false)}
         onNavigate={(newIdx) => setViewerIndex(newIdx)}
-        eventTitle={currentEvent.title}
+        eventTitle={currentEvent ? currentEvent.title : 'Paper Dreams Cebu'}
       />
 
       {/* Organizer Auth Modal */}
